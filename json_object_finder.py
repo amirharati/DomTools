@@ -8,7 +8,7 @@ from collections import defaultdict
 class JSONObjectFinder:
     def __init__(self, search_keys: List[str]):
         self.search_keys = search_keys
-        self.findings = defaultdict(lambda: defaultdict(list))
+        self.findings = defaultdict(list)
         
     def find_objects(self, obj: Any, path: List[str] = None) -> None:
         """Recursively find all instances of specified objects."""
@@ -21,9 +21,7 @@ class JSONObjectFinder:
                 
                 # If this is a key we're looking for, store the value
                 if key in self.search_keys:
-                    # Use JSON string as hash to identify identical objects
-                    value_hash = json.dumps(value, sort_keys=True)
-                    self.findings[key][value_hash].append({
+                    self.findings[key].append({
                         'value': value,
                         'path': '/'.join(map(str, current_path))
                     })
@@ -38,21 +36,16 @@ class JSONObjectFinder:
     def print_findings(self):
         """Print findings in a structured format."""
         for key in self.search_keys:
-            total_instances = sum(len(paths) for paths in self.findings[key].values())
-            if total_instances:
-                print(f"\nFound {total_instances} total instance(s) of '{key}':")
+            instances = self.findings[key]
+            if instances:
+                print(f"\nFound {len(instances)} instance(s) of '{key}':")
                 print("=" * 50)
                 
-                # Print each unique value with its count
-                for i, (_, instances) in enumerate(self.findings[key].items(), 1):
-                    count = len(instances)
-                    print(f"\nUnique Object {i} (found {count} time{'' if count == 1 else 's'}):")
+                for i, instance in enumerate(instances, 1):
+                    print(f"\nInstance {i}:")
+                    print(f"Path: {instance['path']}")
                     print("Content:")
-                    print(json.dumps(instances[0]['value'], indent=2))
-                    if count > 1:
-                        print("\nPaths:")
-                        for instance in instances:
-                            print(f"- {instance['path']}")
+                    print(json.dumps(instance['value'], indent=2))
             else:
                 print(f"\nNo instances of '{key}' found.")
 
